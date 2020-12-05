@@ -1,0 +1,51 @@
+<html lang="en">
+<header>
+  <meta charset="utf-8">
+  <title>MorganCaron - private messsage </title>
+  
+  <script src="https://raw.githubusercontent.com/openpgpjs/openpgpjs/master/dist/lightweight/openpgp.min.js"></script>
+  <script src="https://raw.githubusercontent.com/zenorocha/clipboard.js/blob/master/dist/clipboard.min.js"></script>
+ </header>
+ <body>
+  <h1> Encrypt all the things ! </h1>
+  <p> Paste or write your message beneath, and click "Encrypt". Then, you can copy/paste the message in an email or chat using the dedicated button or a regular selection. </p>
+  
+  <h2> Edit your plain message </h2>
+  <input id="plainMessage" type="textarea"></input>
+  <button id="doEncrypt"> Encrypt </button>
+  <h2> Here comes the encrypted message </h2>
+  <pre id="encryptedMessage">
+  </pre>
+  
+  <script>
+    const keyUrl = "https://keybase.io/morgancaron/pgp_keys.asc?fingerprint=fb1d5f6ced99b8146549a8558635806b2a878903";
+    
+    document.getElementById('doEncrypt').addEventListener('click', doEncrypt);
+    
+    function doEncrypt() {
+      (async () => {
+      
+          const keyResponse = await fetch("https://keybase.io/morgancaron/pgp_keys.asc?fingerprint=fb1d5f6ced99b8146549a8558635806b2a878903")
+          const publicKeyArmored = keyResponse.blob();
+          await openpgp.initWorker({ path: 'openpgp.worker.js' }); // set the relative web worker path
+
+          // put keys in backtick (``) to avoid errors caused by spaces or tabs
+          const publicKeyArmored2 = `-----BEGIN PGP PUBLIC KEY BLOCK-----
+      ...
+      -----END PGP PUBLIC KEY BLOCK-----`;
+
+          const { keys: [privateKey] } = await openpgp.key.readArmored(privateKeyArmored);
+          await privateKey.decrypt(passphrase);
+
+          const { data: encrypted } = await openpgp.encrypt({
+              message: openpgp.message.fromText('Hello, World!'),                 // input as Message object
+              publicKeys: (await openpgp.key.readArmored(publicKeyArmored)).keys  // for encryption
+          });
+          console.log(encrypted); // '-----BEGIN PGP MESSAGE ... END PGP MESSAGE-----'
+      })();
+    }
+    
+  </script>
+  
+ </body>
+</html>
